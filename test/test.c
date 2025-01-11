@@ -72,6 +72,21 @@ extern void test_xdigraph();
 extern void test_xwgraph();
 extern void test_xwdigraph();
 
+#if defined(__linux__)
+extern void test_xlist_s_thread();
+extern void test_xlist_d_thread();
+
+extern void test_xthread_sem();
+
+extern void test_xthread_pool_static();
+extern void test_xthread_pool_dynamic();
+
+extern void test_xsocket_pool_dynamic();
+extern void test_xsocket_pool_static();
+
+extern void test_xtimer_async();
+#endif
+
 int main(void){
     //test_xexcept();
 
@@ -144,6 +159,21 @@ int main(void){
     test_xdigraph();
     test_xwgraph();
     test_xwdigraph();
+
+#if defined(__linux__)
+    // test_xlist_s_thread();
+    // test_xlist_d_thread();
+
+    // test_xthread_sem();
+
+    // test_xthread_pool_static();
+    // test_xthread_pool_dynamic();
+
+    // test_xsocket_pool_dynamic();
+    // test_xsocket_pool_static();
+
+    //  test_xtimer_async();
+#endif    
 
     printf("\n\n   All Pass !!!  \n\n");
     getchar();

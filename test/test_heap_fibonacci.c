@@ -94,6 +94,7 @@ void test_xfibheap() {
         XFibHeap_PT heap = xfibheap_new(test_xfibheap_cmp, NULL);
         xassert(heap);
         xassert(xfibheap_size(heap) == 0);
+        xassert(xfibheap_peek(heap) == NULL);
         xfibheap_free(&heap);
     }
 
@@ -111,6 +112,7 @@ void test_xfibheap() {
         xassert(xfibheap_push(heap, "d"));
         xassert(xfibheap_push(heap, "e"));
         xassert(xfibheap_size(heap) == 10);
+        xassert(strcmp((char*)xfibheap_peek(heap), "a") == 0);
         xassert(xfibheap_is_fibheap(heap));
 
         xfibheap_free(&heap);
@@ -299,6 +301,56 @@ void test_xfibheap() {
         xassert(strcmp((char*)xfibheap_peek(heap), "a") == 0);
         xassert(xfibheap_size(heap) == 5);
         xfibheap_free(&heap);
+    }
+
+    /* xfibheap_merge */
+    {
+        /* heap1 empty, heap2 NULL */
+        {
+            XFibHeap_PT heap = xfibheap_new(test_xfibheap_cmp, NULL);
+            xassert(xfibheap_merge(heap, NULL));
+            xassert(xfibheap_size(heap) == 0);
+            xfibheap_free(&heap);
+        }
+
+        /* heap1 empty, heap2 empty */
+        {
+            XFibHeap_PT heap = xfibheap_new(test_xfibheap_cmp, NULL);
+            XFibHeap_PT heap2 = xfibheap_new(test_xfibheap_cmp, NULL);
+            xassert(xfibheap_merge(heap, &heap2));
+            xassert(xfibheap_size(heap) == 0);
+            xfibheap_free(&heap);
+        }
+
+        /* heap1 empty, heap2 normal */
+        {
+            XFibHeap_PT heap = xfibheap_new(test_xfibheap_cmp, NULL);
+            XFibHeap_PT heap2 = xfibheap_new(test_xfibheap_cmp, NULL);
+            xassert(xfibheap_push(heap2, "a"));
+            xassert(xfibheap_push(heap2, "b"));
+            xassert(xfibheap_merge(heap, &heap2));
+            xassert(xfibheap_size(heap) == 2);
+            xassert(xfibheap_is_fibheap(heap));
+            xassert(strcmp((char*)xfibheap_peek(heap), "a") == 0);
+            xfibheap_free(&heap);
+        }
+
+        /* heap1 normal, heap2 normal */
+        {
+            XFibHeap_PT heap = xfibheap_new(test_xfibheap_cmp, NULL);
+            xassert(xfibheap_push(heap, "c"));
+            xassert(xfibheap_push(heap, "d"));
+
+            XFibHeap_PT heap2 = xfibheap_new(test_xfibheap_cmp, NULL);
+            xassert(xfibheap_push(heap2, "a"));
+            xassert(xfibheap_push(heap2, "b"));
+
+            xassert(xfibheap_merge(heap, &heap2));
+            xassert(xfibheap_size(heap) == 4);
+            xassert(xfibheap_is_fibheap(heap));
+            xassert(strcmp((char*)xfibheap_peek(heap), "a") == 0);
+            xfibheap_free(&heap);
+        }
     }
 
     /* xfibheap_map */
