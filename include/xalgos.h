@@ -326,6 +326,28 @@
 #include "xgraph_directed.h"
 #include "xgraph_weight_directed.h"
 
+#if defined(__linux__)
+
+/* thread safe list */
+#include "xlist_s_thread.h"
+#include "xlist_d_thread.h"
+
+/* semaphore */
+#include "xthread_sem.h"
+
+/* thread pool */
+#include "xthread_pool_static.h"
+#include "xthread_pool_dynamic.h"
+
+/* socket client pool */
+#include "xsocket_pool_dynamic.h"
+#include "xsocket_pool_static.h"
+
+/* timer */
+#include "xtimer_async.h"
+
+#endif
+
 #endif
 
 
