@@ -29,7 +29,7 @@ struct XFibHeap_Node {
     XFibHeap_Node_PT prev;   /* link to brother node */
     XFibHeap_Node_PT next;   /* link to brother node */
 
-    int   mark;              /* lost own children or not since becoming the child */
+    bool  mark;              /* lost own children or not since becoming the child of other node */
     int   degree;            /* total number of children values of this node */
 };
 

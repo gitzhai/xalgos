@@ -10,16 +10,20 @@
 #   If not, see <https://mit-license.org/>.
 #
 
+UNAME_S := $(shell uname -s)
+
 #    INCLUDE_PATH : extern header file's path                   -I
 #    LIB_PATH     : while compiling, extern library's path      -L
 #    RUN_PATH     : when running, extern library's path         -Wl, -rpath=
 #    LIB_SOURCES  : extern librarys                             -l
 #    Note         : Add prefix for each path  
 INCLUDE_PATH  :=
-LIB_PATH      :=
+LIB_PATH      := 
 RUN_PATH      :=     # eg : -Wl, -rpath=.
-LIB_SOURCES   :=
-
+LIB_SOURCES   := 
+ifeq ($(UNAME_S),Linux)
+    LIB_SOURCES   := -lpthread
+endif
 
 #    additional depedent files
 #    Note: if you add more depedent files here, you have to use make all, if use just call make, it will not make all things
@@ -92,7 +96,11 @@ INCLUDE_DIR     := $(EXPORT_DIR)/include
 
 ifdef TARGET_KIND_BIN
     TARGET_NAME := $(patsubst %_bin,%,$(notdir $(shell pwd)))
-    COMPILE_OPTIONS := -std=c99 -DXDEBUG
+    ifeq ($(UNAME_S),Linux)
+        COMPILE_OPTIONS := -std=gnu11 -DXDEBUG
+    else
+        COMPILE_OPTIONS := -std=c99 -DXDEBUG
+    endif
     LINK_OPTIONS :=
     EXPORT_TARGET_DIR  := $(EXPORT_DIR)/bin/
 endif
@@ -100,15 +108,19 @@ endif
 ifdef TARGET_KIND_LIBA
     TARGET_NAME := $(patsubst %_liba,%,$(notdir $(shell pwd)))
 	TARGET_NAME := lib$(TARGET_NAME).a
-    COMPILE_OPTIONS := -std=c99 -DXDEBUG
+    COMPILE_OPTIONS := -std=gnu11 -DXDEBUG
     LINK_OPTIONS :=
     EXPORT_TARGET_DIR  := $(EXPORT_DIR)/lib/
 endif
 
 ifdef TARGET_KIND_LIBSO
     TARGET_NAME := $(patsubst %_libso,%,$(notdir $(shell pwd)))
-    TARGET_NAME := lib$(TARGET_NAME).so
-    COMPILE_OPTIONS := -Wcast-align -D__EXTENSIONS__ -DC_PANIC -DPOSIX -fno-builtin -pipe -O2 -pthread -O0 -g -fno-stack-protector -O3 -D_DETAILED_DBG -funsigned-char -DUSE_32BIT_ONLY -DXDEBUG -fpic -std=c99
+    TARGET_NAME := lib$(TARGET_NAME).so    
+    ifeq ($(UNAME_S),Linux)
+        COMPILE_OPTIONS := -Wcast-align -D__EXTENSIONS__ -DC_PANIC -DPOSIX -fno-builtin -pipe -O2 -pthread -O0 -g -fno-stack-protector -O3 -D_DETAILED_DBG -funsigned-char -DXDEBUG -fpic -std=gnu11
+    else
+        COMPILE_OPTIONS := -Wcast-align -D__EXTENSIONS__ -DC_PANIC -DPOSIX -fno-builtin -pipe -O2 -pthread -O0 -g -fno-stack-protector -O3 -D_DETAILED_DBG -funsigned-char -DXDEBUG -fpic -std=c99
+    endif
     LINK_OPTIONS  := -shared -fPIC
     EXPORT_TARGET_DIR := $(EXPORT_DIR)/lib/ 
 endif

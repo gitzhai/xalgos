@@ -20,6 +20,9 @@
 
 #include <stdlib.h>
 #include <string.h>
+#if defined(__linux__)
+#include <pthread.h>
+#endif
 
 #include "../include/xassert.h"
 #include "../include/xexcept.h"
@@ -43,13 +46,24 @@ struct XMem_Descriptor {
 };
 
 static XMem_Descriptor_PT xmem_hashtab[XMEM_HASHTAB_SIZE] = { NULL };
+#if defined(__linux__)
+static pthread_mutex_t xmem_mutex = PTHREAD_MUTEX_INITIALIZER;
+#endif
 
 static
 XMem_Descriptor_PT xmem_find(const void *ptr) {
+#if defined(__linux__)
+    pthread_mutex_lock(&xmem_mutex);
+#endif
+
     XMem_Descriptor_PT bp = xmem_hashtab[XMEM_HASH(ptr, xmem_hashtab)];
 
     while (bp && bp->ptr != ptr)
         bp = bp->next;
+
+#if defined(__linux__)
+    pthread_mutex_unlock(&xmem_mutex);
+#endif
 
     return bp;
 }
@@ -85,6 +99,7 @@ XMem_Descriptor_PT xmem_dalloc(void *ptr, long size, const char *file, int line)
 void* xmem_malloc(long nbytes, const char *file, int line) {
     xassert(0 < nbytes);
 
+
     {
 #ifdef XWRAP_MALLOC
         void *ptr = __real_malloc(nbytes);
@@ -92,10 +107,18 @@ void* xmem_malloc(long nbytes, const char *file, int line) {
         void *ptr = malloc(nbytes);
 #endif
         if (ptr) {
+#if defined(__linux__)
+            pthread_mutex_lock(&xmem_mutex);
+#endif
+
             XMem_Descriptor_PT bp = xmem_dalloc(ptr, nbytes, file, line);
             unsigned int h = XMEM_HASH(ptr, xmem_hashtab);
             bp->next = xmem_hashtab[h];
             xmem_hashtab[h] = bp;
+
+#if defined(__linux__)
+            pthread_mutex_unlock(&xmem_mutex);
+#endif
             return ptr;
         }
         else {
@@ -117,6 +140,10 @@ void xmem_free(void *ptr, const char *file, int line) {
     if (!ptr) {
         return;
     }
+
+#if defined(__linux__)
+    pthread_mutex_lock(&xmem_mutex);
+#endif
 
     {
         unsigned int h = XMEM_HASH(ptr, xmem_hashtab);
@@ -161,6 +188,9 @@ void xmem_free(void *ptr, const char *file, int line) {
     free(ptr);
 #endif
 
+#if defined(__linux__)
+    pthread_mutex_unlock(&xmem_mutex);
+#endif
     return;
 }
 
@@ -237,11 +267,17 @@ void xmem_leak(void(*apply)(const void *ptr, long size, const char *file, int li
     XMem_Descriptor_PT bp = NULL;
     xassert(apply);
 
+#if defined(__linux__)
+    pthread_mutex_lock(&xmem_mutex);
+#endif
     for (int i = 0; i < XMEM_HASHTAB_SIZE; i++) {
         for (bp = xmem_hashtab[i]; bp; bp = bp->next) {
             apply(bp->ptr, bp->size, bp->file, bp->line, cl);
         }
     }
+#if defined(__linux__)
+    pthread_mutex_unlock(&xmem_mutex);
+#endif
 }
 
 #endif
